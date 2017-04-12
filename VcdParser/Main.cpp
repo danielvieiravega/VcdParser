@@ -3,18 +3,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
-
-struct Module
-{
-	std::string Name;
-	unsigned Signals;
-};
-
-struct Signal
-{
-	std::string Name;
-	std::string Symbol;
-};
+#include "Parser.h"
 
 std::vector<std::string> SplitBySpace(std::string str)
 {
@@ -48,18 +37,31 @@ int main()
 				Module module;
 				module.Name = splittedLine[2];
 
-				unsigned signalCounter = 0;
 				while (getline(vcdFile, line))
 				{
+					
 					if(line.find("$var") != std::string::npos)
 					{
-						signalCounter++;
+						Signal signal;
+						std::vector<std::string> splittedLineSignal = SplitBySpace(line);
+						signal.Symbol = splittedLineSignal[3];
+						if (splittedLineSignal.size() == 6)
+						{
+							signal.Name = splittedLineSignal[4];
+						}
+						else
+						{
+							signal.Name = splittedLineSignal[4] + ' ' + splittedLineSignal[5];
+						}
+
+						module.Signals.push_back(signal);
 					}
 					else {
 						break;
 					}
 				}
-				module.Signals = signalCounter;
+				
+
 				modules.push_back(module);
 			}
 			
@@ -75,7 +77,7 @@ int main()
 	for (auto it = modules.begin(); it != modules.end(); ++it)
 	{
 		std::cout << "Module: " << (*it).Name << std::endl;
-		std::cout << "Signals count: " << (*it).Signals << std::endl;
+		//std::cout << "Signals count: " << (*it).Signals << std::endl;
 		std::cout << std::endl;
 	}
 
