@@ -6,8 +6,6 @@
 #include <map>
 #include "Parser.h"
 
-
-
 std::vector<std::string> SplitBySpace(std::string str)
 {
 	std::string buf;
@@ -23,10 +21,11 @@ std::vector<std::string> SplitBySpace(std::string str)
 
 int main()
 {
-	std::string vcdFilePath = "C:\\Users\\daniel.vega\\Dropbox\\ConteudoPucrs\\VLSI2\\T1\\sap.vcd";
+	std::string vcdFilePath = "C:\\Users\\danie\\Dropbox\\ConteudoPucrs\\VLSI2\\T1\\sap.vcd";
 	std::ifstream vcdFile;
 	std::string line;
 	std::vector<Module> modules;
+	double clock = 0;
 
 	vcdFile.open(vcdFilePath);
 
@@ -45,7 +44,7 @@ int main()
 					if(line.find("$var") != std::string::npos)
 					{
 						Signal signal;
-						signal.SwitchingActivityCounter = 0;
+						signal.SwitchingActivityCounter = -1;
 						std::vector<std::string> splittedLineSignal = SplitBySpace(line);
 						signal.Symbol = splittedLineSignal[3];
 						if (splittedLineSignal.size() == 6)
@@ -75,21 +74,53 @@ int main()
 
 				bool foundSwitchingActivity = false;
 
+				
+				unsigned clockCounter = 0;
+				unsigned middle = 0;
+				unsigned right = 0;
+				std::string::size_type sz;
 				while (getline(vcdFile, line))
 				{
+					if((line.size() > 0) && (line.at(0) == '#') && (clockCounter < 2))
+					{
+						std::string numberStr = line.substr(1, std::string::npos);
+						int i_dec = std::stoi(numberStr, &sz);
+
+						//TODO: Maybe the middle is not necessary
+						if (clockCounter == 0)
+						{
+							middle = std::stoi(numberStr, &sz);
+						}
+						else if (clockCounter == 1)
+						{
+							right = std::stoi(numberStr, &sz);
+						}
+
+						if (clockCounter == 1)
+						{
+							clock = 1.0 / (right*10e-9);
+						}
+
+						clockCounter++;
+					}
+
 					if ((line.find('0') != std::string::npos)
 						|| (line.find('1') != std::string::npos)
 						|| (line.find('z') != std::string::npos))
 					{
 						foundSwitchingActivity = false;
 
-						for (auto it = modules.begin(); it != modules.end() && !foundSwitchingActivity; ++it)
+						for (std::vector<Module>::iterator modulesIterator = modules.begin(); 
+							modulesIterator != modules.end() && !foundSwitchingActivity; 
+							++modulesIterator)
 						{
-							auto modulesIterator = *it;
-							for (auto it1 = modulesIterator.Signals.begin(); it1 != modulesIterator.Signals.end() && !foundSwitchingActivity; ++it1)
+							for (std::vector<Signal>::iterator signalsIterator = modulesIterator->Signals.begin();
+								signalsIterator != modulesIterator->Signals.end() && !foundSwitchingActivity;
+								++signalsIterator)
 							{
-								auto signalsIterator = *it1;
-								for (auto switchingActivityIterator = switchingActivitySignals.begin(); (switchingActivityIterator != switchingActivitySignals.end()) && !foundSwitchingActivity; ++switchingActivityIterator)
+								for (std::vector<std::string>::iterator switchingActivityIterator = switchingActivitySignals.begin();
+									(switchingActivityIterator != switchingActivitySignals.end()) && !foundSwitchingActivity;
+									++switchingActivityIterator)
 								{
 									std::string currentSignalActivity = "";
 									if (line.find('0') != std::string::npos)
@@ -105,20 +136,20 @@ int main()
 										currentSignalActivity = 'z';
 									}
 
-									if (line.find(signalsIterator.Symbol) != std::string::npos)
+									if (line.find(signalsIterator->Symbol) != std::string::npos)
 									{
-										if (signalsIterator.SwitchingActivityCounter == 0)
+										if (signalsIterator->SwitchingActivityCounter == -1)
 										{
-											(*it1).SwitchingActivityCounter++;
-											(*it1).CurrentActivity = currentSignalActivity;
+											signalsIterator->SwitchingActivityCounter++;
+											signalsIterator->CurrentActivity = currentSignalActivity;
 											foundSwitchingActivity = true;
 										}
 										else
 										{
-											if (signalsIterator.CurrentActivity != *switchingActivityIterator)
+											if (signalsIterator->CurrentActivity != *switchingActivityIterator)
 											{
-												(*it1).SwitchingActivityCounter++;
-												(*it1).CurrentActivity = currentSignalActivity;
+												signalsIterator->SwitchingActivityCounter++;
+												signalsIterator->CurrentActivity = currentSignalActivity;
 												foundSwitchingActivity = true;
 											}
 											else
@@ -138,6 +169,7 @@ int main()
 				}
 			}
 			
+			
 		}
 
 		
@@ -150,15 +182,13 @@ int main()
 
 	std::cout << "Number of Modules: " << modules.size() << std::endl;
 	
-	for (auto it = modules.begin(); it != modules.end(); ++it)
+	for (auto &it : modules)
 	{
-		std::cout << "Module: " << (*it).Name << std::endl;
-		std::cout << "Signals count: " << (*it).Signals.size() << std::endl;
+		std::cout << "Module: " << it.Name << std::endl;
+		std::cout << "Signals count: " << it.Signals.size() << std::endl;
 		std::cout << std::endl;
 	}
 
-	std::cout << "Clock frequency: " << "TBD" << std::endl;
-	std::cout << "Switching activiy: " << "TBD" << std::endl;
+	std::cout << "Clock frequency: " << clock << " Hz"<< std::endl;
 	std::cout << std::endl;
-
 }
