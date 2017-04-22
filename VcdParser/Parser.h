@@ -4,8 +4,8 @@ struct Signal
 {
 	std::string Name;
 	std::string Symbol;
-	unsigned SwitchingActivityCounter;
-	std::string CurrentActivity;
+	int SwitchingActivityCounter;
+	char CurrentActivity;
 };
 
 struct Module
