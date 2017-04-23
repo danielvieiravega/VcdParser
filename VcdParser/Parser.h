@@ -25,12 +25,13 @@ struct Module
 class Parser
 {
 private:
-	std::vector<Module> modules;
-	double clock;
-	unsigned clockCounter;
-	bool isClockCalculated;
-	std::ifstream vcdFile;
-	std::string line;
+	std::vector<Module> modules_;
+	double clock_;
+	unsigned clock_counter_;
+	bool is_clock_calculated_;
+	std::ifstream vcd_file_;
+	std::string line_;
+	std::string vcd_file_path_;
 
 public:
 	Parser();
@@ -41,11 +42,11 @@ public:
 
 	inline bool IsClockCalculated() const
 	{
-		return isClockCalculated;
+		return is_clock_calculated_;
 	}
 
 	inline std::vector<Module> GetModules() const
 	{
-		return modules;
+		return modules_;
 	}
 };

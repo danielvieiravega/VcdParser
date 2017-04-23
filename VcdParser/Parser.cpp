@@ -1,5 +1,10 @@
 #include "Parser.h"
 
+/**
+ * \brief Splits the given string by space in a vector
+ * \param str string to be splitted
+ * \return A vector containing the the splitted line_
+ */
 std::vector<std::string> SplitBySpace(std::string str)
 {
 	std::string buf;
@@ -13,99 +18,105 @@ std::vector<std::string> SplitBySpace(std::string str)
 	return tokens;
 }
 
+/**
+ * \brief Constructor
+ */
 Parser::Parser()
-	: clock(0), clockCounter(0), isClockCalculated(false)
+	: clock_(0), clock_counter_(0), is_clock_calculated_(false)
 {
 }
 
+/**
+ * \brief Adds the given module in the modules_ vector
+ * \param module Module to be added to the modules_ vector
+ */
 void Parser::AddModule(Module module)
 {
-	modules.push_back(module);
+	modules_.push_back(module);
 }
 
+/**
+ * \brief Displays the report of the parsed data
+ */
 void Parser::ShowReport()
 {
-	std::cout << "################" << std::endl;
-	std::cout << "#  VCD Parser  #" << std::endl;
-	std::cout << "################" << std::endl;
+	std::cout << "-####################-" << std::endl;
+	std::cout << "-###  VCD Parser  ###-" << std::endl;
+	std::cout << "-####################-" << std::endl;
 	std::cout << std::endl;
 
-	for (auto &module : modules)
+	std::cout << "File Path: " << vcd_file_path_ << std::endl;
+	std::cout << "Clock frequency: " << clock_ << " Hz" << std::endl;
+	std::cout << std::endl;
+
+	for (auto &module : modules_)
 	{
 		std::cout << "Module: " << module.Name << std::endl;
 		std::cout << "Signals: " << module.Signals.size() << std::endl;
 
 		for (auto &signal : module.Signals)
 		{
-			if (signal.SwitchingActivityCounter > 0)
-			{
-				std::cout << "Signal: " << signal.Name << std::endl;
-				std::cout << "Switching activity: " << signal.SwitchingActivityCounter << std::endl;
-				std::cout << std::endl;
-			}
+			std::cout << "Signal: " << signal.Name << std::endl;
+			std::cout << "Switching activity: " << ((signal.SwitchingActivityCounter > 0) ? signal.SwitchingActivityCounter : 0) << std::endl;
+			std::cout << std::endl;
 		}
 
 		std::cout << "==================================" << std::endl;
 		std::cout << std::endl;
 	}
-
-	std::cout << "Clock frequency: " << clock << " Hz" << std::endl;
-	std::cout << std::endl;
+		
+	std::cout << "--------End report--------" << std::endl;
 }
 
+/**
+ * \brief Calculates the clock_ frequency 
+ */
 void Parser::CalculeClockFrequency()
 {
-	if ((line.size() > 0) && (line.at(0) == '#') && (clockCounter < 2))
-	{
-		unsigned middleValue = 0;
-		unsigned right = 0;
+	if ((line_.size() > 0) && (line_.at(0) == '#') && (clock_counter_ < 2))
+	{	
 		std::string::size_type sz;
-		std::string numberStr = line.substr(1, std::string::npos);
-		int i_dec = std::stoi(numberStr, &sz);
-	
-		//TODO: Maybe the middle is not necessary
-		if (clockCounter == 0)
+		auto numberStr = line_.substr(1, std::string::npos);
+
+		if (clock_counter_ == 1)
 		{
-			middleValue = std::stoi(numberStr, &sz);
-		}
-		else if (clockCounter == 1)
-		{
-			right = std::stoi(numberStr, &sz);
+			auto period = std::stoi(numberStr, &sz);
+			clock_ = 1.0 / (period*10e-9);
+			is_clock_calculated_ = true;
 		}
 
-		if (clockCounter == 1)
-		{
-			clock = 1.0 / (right*10e-9);
-			isClockCalculated = true;
-		}
-
-		clockCounter++;
+		clock_counter_++;
 	}
 }
 
+/**
+ * \brief Parses the provide .vcd file
+ * \param vcdFilePath Full path of .vcd file
+ * \return true whether the parsing was succesful else false
+ */
 bool Parser::Parse(std::string vcdFilePath)
 {
-	bool result = false;
-	std::string line;
-	vcdFile.open(vcdFilePath);
+	auto result = false;
+	vcd_file_.open(vcdFilePath);
 
-	if (vcdFile.is_open())
+	if (vcd_file_.is_open())
 	{
-		while (getline(vcdFile, line))
+		vcd_file_path_ = vcdFilePath;
+		while (getline(vcd_file_, line_))
 		{
-			if (line.find("$scope") != std::string::npos)
+			if (line_.find("$scope") != std::string::npos)
 			{
-				std::vector<std::string> splittedLine = SplitBySpace(line);
+				auto splittedLine = SplitBySpace(line_);
 				Module module;
 				module.Name = splittedLine[2];
 
-				while (getline(vcdFile, line))
+				while (getline(vcd_file_, line_))
 				{
-					if (line.find("$var") != std::string::npos)
+					if (line_.find("$var") != std::string::npos)
 					{
 						Signal signal;
 						signal.SwitchingActivityCounter = -1;
-						std::vector<std::string> splittedLineSignal = SplitBySpace(line);
+						auto splittedLineSignal = SplitBySpace(line_);
 						signal.Symbol = splittedLineSignal[3];
 						if (splittedLineSignal.size() == 6)
 						{
@@ -125,23 +136,23 @@ bool Parser::Parse(std::string vcdFilePath)
 
 				AddModule(module);
 			}
-			else if (line.find("$dumpvars") != std::string::npos)
+			else if (line_.find("$dumpvars") != std::string::npos)
 			{
 				char switchingActivitySignals[SwitchingActivitySignalsSize] = { '0', '1', 'z' };
 
 				auto foundSwitchingActivity = false;
 
-				while (getline(vcdFile, line))
+				while (getline(vcd_file_, line_))
 				{
 					if (!IsClockCalculated())
 						CalculeClockFrequency();
 
-					if ((line[0] == '0') || (line[0] == '1') || (line[0] == 'z'))
+					if ((line_[0] == '0') || (line_[0] == '1') || (line_[0] == 'z'))
 					{
 						foundSwitchingActivity = false;
 						
-						for (std::vector<Module>::iterator modulesIterator = modules.begin();
-							modulesIterator != modules.end() && !foundSwitchingActivity;
+						for (std::vector<Module>::iterator modulesIterator = modules_.begin();
+							modulesIterator != modules_.end() && !foundSwitchingActivity;
 							++modulesIterator)
 						{
 							for (std::vector<Signal>::iterator signalsIterator = modulesIterator->Signals.begin();
@@ -150,25 +161,20 @@ bool Parser::Parse(std::string vcdFilePath)
 							{
 								for (auto i = 0; i < SwitchingActivitySignalsSize && !foundSwitchingActivity; i++)
 								{
-									std::string lineSubStr = line.substr(1, line.size());
-
-									if (signalsIterator->Symbol == "!")
-									{
-										std::cout << "1";
-									}
+									auto lineSubStr = line_.substr(1, line_.size());
 
 									if (lineSubStr == signalsIterator->Symbol)
 									{
 										char currentSignalActivity = ' ';
-										if (line[0] == '0')
+										if (line_[0] == '0')
 										{
 											currentSignalActivity = '0';
 										}
-										else if (line[0] == '1')
+										else if (line_[0] == '1')
 										{
 											currentSignalActivity = '1';
 										}
-										else if (line[0] == 'z')
+										else if (line_[0] == 'z')
 										{
 											currentSignalActivity = 'z';
 										}
@@ -205,10 +211,9 @@ bool Parser::Parse(std::string vcdFilePath)
 			}
 		}
 
-		vcdFile.close();
+		vcd_file_.close();
 		result = true;
 	}
 
 	return result;
 }
-
