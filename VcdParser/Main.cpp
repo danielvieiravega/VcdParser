@@ -1,25 +1,41 @@
 #include <iostream>
 #include <string>
 #include "Parser.h"
+#include <algorithm>
 
 int main(int argc, char **argv)
 {
 	std::string vcdFilePath;
 	Parser parser;
-
-	std::cout << "Provide the .vcd file path: ";
-	std::cin >> vcdFilePath;
 	auto returnValue = EXIT_SUCCESS;
-	
-	// vcdFilePath = "C:\\Users\\danie\\Dropbox\\ConteudoPucrs\\VLSI2\\T1\\sap.vcd";
-	
-	if (parser.Parse(vcdFilePath))
+
+	if (argc > 1)
 	{
-		parser.ShowReport();
+		vcdFilePath = argv[1];
 	}
 	else
 	{
-		std::cout << std::endl << "It was unable to parse the provided file!";
+		std::cout << "Provide the .vcd file path: ";
+		std::cin >> vcdFilePath;
+	}
+	
+	std::transform(vcdFilePath.begin(), vcdFilePath.end(), vcdFilePath.begin(), ::tolower);
+
+	if (vcdFilePath.find(".vcd") != std::string::npos)
+	{
+		if (parser.Parse(vcdFilePath))
+		{
+			parser.ShowReport();
+		}
+		else
+		{
+			std::cout << std::endl << "It was unable to parse the provided file!";
+			returnValue = EXIT_FAILURE;
+		}
+	}
+	else
+	{
+		std::cout << std::endl << "The provided file is not a .vcd file!";
 		returnValue = EXIT_FAILURE;
 	}
 
