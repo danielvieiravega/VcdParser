@@ -25,6 +25,9 @@ struct Module
 class Parser
 {
 private:
+	std::string simulation_date_;
+	std::string version_;
+	std::string time_scale_;
 	std::vector<Module> modules_;
 	double clock_;
 	unsigned clock_counter_;
@@ -33,12 +36,24 @@ private:
 	std::string line_;
 	std::string vcd_file_path_;
 
-public:
-	Parser();
 	void AddModule(Module module);
-	void ShowReport();
+	double GetTimeScale() const;
 	void CalculeClockFrequency();
-	bool Parse(std::string vcdFilePath);
+	void ParseDate();
+	void ParseVersion();
+	void ParseTimeScale();
+	
+	void RemoveTabFromString(std::string &str) const;
+
+	inline std::string GetSimulationDate() const
+	{
+		return simulation_date_;
+	}
+
+	inline std::string GetVersion() const
+	{
+		return version_;
+	}
 
 	inline bool IsClockCalculated() const
 	{
@@ -49,4 +64,10 @@ public:
 	{
 		return modules_;
 	}
+
+public:
+	bool Parse(std::string vcdFilePath);
+	Parser();
+	void ShowReport();
+	
 };
