@@ -163,8 +163,6 @@ void Parser::ParseDate()
 				{
 					simulation_date_ = line_;
 					RemoveTabFromString(simulation_date_);
-					/*auto end_pos = std::remove(simulation_date_.begin(), simulation_date_.end(), '\t');
-					simulation_date_.erase(end_pos, simulation_date_.end());*/
 				}
 				else
 				{
@@ -192,8 +190,6 @@ void Parser::ParseVersion()
 				{
 					version_ = line_;
 					RemoveTabFromString(version_);
-					/*auto end_pos = std::remove(version_.begin(), version_.end(), '\t');
-					version_.erase(end_pos, version_.end());*/
 				}
 				else
 				{
