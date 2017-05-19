@@ -29,13 +29,13 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			std::cout << std::endl << "It was unable to parse the provided file!";
+			std::cout << std::endl << "It was unable to parse the provided file!" << std::endl;
 			returnValue = EXIT_FAILURE;
 		}
 	}
 	else
 	{
-		std::cout << std::endl << "The provided file is not a .vcd file!";
+		std::cout << std::endl << "The provided file is not a .vcd file!" << std::endl;
 		returnValue = EXIT_FAILURE;
 	}
 
