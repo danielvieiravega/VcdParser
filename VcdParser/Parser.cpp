@@ -58,42 +58,7 @@ void Parser::ShowReport()
 	for (auto &module : modules_)
 	{
 		std::cout << "Module: " << module.Name << std::endl;
-
-		unsigned signalCounter = 0;
-		auto previousSignal = module.Signals[0];
-		for (auto it = module.Signals.begin(); it != module.Signals.end(); ++it)
-		{	
-			if (signalCounter == 0)
-			{
-				signalCounter++;
-			}
-			else
-			{
-				if (it->Name.find(" ") != std::string::npos)
-				{
-					auto signalName = SplitBySpace(it->Name)[0];
-					if (previousSignal.Name.find(" ") != std::string::npos)
-					{
-						auto previossignalName = SplitBySpace(previousSignal.Name)[0];
-						if (previossignalName.compare(signalName) != 0)
-						{
-							signalCounter++;
-						}
-					}
-					else
-					{
-						signalCounter++;
-					}
-				}					
-				else
-				{
-					signalCounter++;
-				}
-			}
-			previousSignal = *it;
-		}
-
-		std::cout << "Signals count: " << signalCounter << std::endl << std::endl;
+		std::cout << "Signals count: " << module.SignalCounter << std::endl << std::endl;
 
 		std::cout << std::setw(20) << std::left << "Name" << std::setw(30) << std::left << "Switching activity" << std::endl;
 		std::cout << std::setw(20) << std::left << "----" << std::setw(30) << std::left << "------------------" << std::endl;
@@ -349,8 +314,50 @@ bool Parser::Parse(std::string vcdFilePath)
 		}
 
 		vcd_file_.close();
+		CalculateSignalCounter();
 		result = true;
 	}
 
 	return result;
+}
+
+void Parser::CalculateSignalCounter()
+{
+	for (auto &module : modules_)
+	{
+		unsigned signalCounter = 0;
+		auto previousSignal = module.Signals[0];
+		for (auto it = module.Signals.begin(); it != module.Signals.end(); ++it)
+		{	
+			if (signalCounter == 0)
+			{
+				signalCounter++;
+			}
+			else
+			{
+				if (it->Name.find(" ") != std::string::npos)
+				{
+					auto signalName = SplitBySpace(it->Name)[0];
+					if (previousSignal.Name.find(" ") != std::string::npos)
+					{
+						auto previossignalName = SplitBySpace(previousSignal.Name)[0];
+						if (previossignalName.compare(signalName) != 0)
+						{
+							signalCounter++;
+						}
+					}
+					else
+					{
+						signalCounter++;
+					}
+				}					
+				else
+				{
+					signalCounter++;
+				}
+			}
+			previousSignal = *it;
+		}
+		module.SignalCounter = signalCounter;
+	}
 }

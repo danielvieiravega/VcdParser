@@ -20,6 +20,7 @@ struct Module
 {
 	std::string Name;
 	std::vector<Signal> Signals;
+	unsigned SignalCounter;
 };
 
 class Parser
@@ -42,6 +43,7 @@ private:
 	void ParseDate();
 	void ParseVersion();
 	void ParseTimeScale();
+	void CalculateSignalCounter();
 	
 	void RemoveTabFromString(std::string &str) const;
 
